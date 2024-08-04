@@ -1,0 +1,15 @@
+# Ignoring
+ffmpeg
+*.pyc
+*.png
+*.npy
+*.json
+*.csv
+*.log
+
+# Dataset
+dataset
+
+# Trained Models
+bitrate_ladder_construction/models
+quality_ladder_construction/models
