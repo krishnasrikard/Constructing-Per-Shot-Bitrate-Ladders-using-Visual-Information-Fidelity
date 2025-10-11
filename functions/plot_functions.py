@@ -9,12 +9,11 @@ import os, sys, warnings
 import pickle, operator
 from tqdm import tqdm
 warnings.filterwarnings("ignore")
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import functions.extract_functions as extract_functions
 import functions.IO_functions as IO_functions
-import bitrate_ladder_construction.BL_functions.bitrate_ladder_functions as bitrate_ladder_functions
-import quality_ladder_construction.QL_functions.quality_ladder_functions as quality_ladder_functions
 import functions.correction_algorithms as correction_algorithms
+import modules.bitrate_quality_ladder_evaluation_functions as bitrate_quality_ladder_evaluation_functions
 import defaults
 
 
@@ -127,7 +126,10 @@ def Plot_Predictions(
 		plt.scatter(y, y_pred)
 		plt.plot([np.min(y), np.max(y)], [np.min(y), np.max(y)])
 
-	plt.savefig(plot_save_path, dpi=400, bbox_inches='tight')
+	if plot_save_path is None:
+		print ("Plot save path is None. Hence, not saving the plot")
+	else:
+		plt.savefig(plot_save_path, dpi=400, bbox_inches='tight')
 
 	if show:
 		plt.show()
@@ -139,31 +141,102 @@ def Plot_Predictions(
 		np.save(save_results, np.asarray(R))
 
 
+
+#  Plotting BD-Histograms
+def Plot_BD_Metrics(
+	bd_metrics_paths:list,
+	save_path:str,
+):
+	# Plotting
+	plt.figure(figsize=(12,8))
+
+	# Histogram plot of BD-metrics
+	bitrate_bins = [-60,-50,-40,-30,-20,-10,0,10,20,30,40,50,60]
+	quality_bins = [-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7]
+
+	# BD-Metrics
+	BD_Metrics = []
+
+	for path in bd_metrics_paths:
+		# Calculating BD-metrics
+		Metrics = np.load(path, allow_pickle=True)[()]
+		Metrics = np.asarray(list(Metrics.values()))
+		N = len(Metrics)
+
+		# Replacing NaNs and Infinities
+		Metrics = Metrics[np.logical_not(np.all(np.isnan(Metrics), axis=1)), :]
+
+		# Assertions
+		assert len(Metrics) > 0.95*N, "More than 10% of BD-Metrics have NaNs"
+
+		# Data
+		Metrics = np.clip(Metrics, -60, 60)
+		BD_Metrics.append(Metrics)
+
+	
+	# Calculating Mean and Standard Deviation
+	Mean = []
+	Std = []
+	for i in range(4):
+		single_bd_metric = []
+		for j in range(len(bd_metrics_paths)):
+			single_bd_metric.append(BD_Metrics[j][:,i])
+		
+		single_bd_metric = np.concatenate(single_bd_metric, axis=0)
+
+		Mean.append(np.round(np.mean(single_bd_metric), decimals=3))
+		Std.append(np.round(np.std(single_bd_metric), decimals=3))
+		
+
+	# Plotting
+	plt.subplot(2,2,1)
+	plt.title(r"BD-Rate wrt AL ($\mu$={}, $\sigma$={})".format(Mean[0], Std[0]))
+	plt.grid()
+	for i in range(len(bd_metrics_paths)):
+		sns.histplot(data=BD_Metrics[i][:,0], bins=bitrate_bins, kde=True, element="step")
+
+	plt.subplot(2,2,2)
+	plt.title(r"BD-VMAF wrt AL ($\mu$={}, $\sigma$={})".format(Mean[1], Std[1]))
+	plt.grid()
+	for i in range(len(bd_metrics_paths)):
+		sns.histplot(data=BD_Metrics[i][:,1], bins=quality_bins, kde=True, element="step")
+
+	plt.subplot(2,2,3)
+	plt.title(r"BD-Rate wrt RL ($\mu$={}, $\sigma$={})".format(Mean[2], Std[2]))
+	plt.grid()
+	for i in range(len(bd_metrics_paths)):
+		sns.histplot(data=BD_Metrics[i][:,2], bins=bitrate_bins, kde=True, element="step")
+
+	plt.subplot(2,2,4)
+	plt.title(r"BD-VMAF wrt RL ($\mu$={}, $\sigma$={})".format(Mean[3], Std[3]))
+	plt.grid()
+	for i in range(len(bd_metrics_paths)):
+		sns.histplot(data=BD_Metrics[i][:,3], bins=quality_bins, kde=True, element="step")
+
+	plt.savefig(save_path, dpi=400, bbox_inches='tight')
+
+
+
 # Plotting Convex-Hull of Ladders
-def Plot_Pareto_Front(
+def Plot_Predicted_RQ_Curve(
 	video_file:str,
-	codec:str,
-	preset:str,
 	ladder_paths:list,
 	ladder_labels:list,
-	results_path:str
+	save_path:str
 ):
 	"""
 	Args:
 		video_file (str): The video file name.
-		codec (str): Codec used to generate RQ points that need to be extracted. Options: ["libx265", "libx264"]
-		preset (str): Preset used to generate RQ points that need to be extracted. Options: ["slow", "medium", "fast", "veryfast", "ultrafast"]
 		ladder_path (list): The path to Ladders that needs to be considered.
 		ladder_labels (list): List of labels that describe each ladder to consider.
-		results_path (str): Path to save results.
+		save_path (str): Path to save results.
 	"""
 	# Rate-Quality points
 	RQ_pairs = extract_functions.Extract_RQ_Information(
-		video_rq_points_info=IO_functions.read_create_jsonfile(os.path.join(defaults.rq_points_dataset_path, codec, preset, video_file, "crfs.json")),
+		video_rq_points_info=IO_functions.read_create_jsonfile(os.path.join(defaults.rq_points_dataset_path, "libx265", "medium", video_file, "crfs.json")),
 		quality_metric="vmaf",
 		resolutions=defaults.resolutions,
 		CRFs=defaults.CRFs,
-		bitrates=None,
 		QPs=None,
 		min_quality=defaults.min_quality,
 		max_quality=defaults.max_quality,
@@ -177,39 +250,40 @@ def Plot_Pareto_Front(
 	Resolution_Color_Map = dict(zip(defaults.resolutions, ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f']))
 	linestyles = ["dotted", "dotted", "dashed", "dashed", "solid", "solid"]
 
-	# Plotting Pareto-Fronts
+	# Plotting Rate-Quality_Curves
 	plt.figure(figsize=(10,8))
 	plt.grid()
 	plt.xlabel(r"$\log_{2}(Bitrate)$")
 	plt.ylabel("VMAF")
-	plt.title("Convex-Hulls for " + video_file.split("_")[0])
+	plt.title("Rate-Quality Curves for " + video_file.split("_")[0])
 
-	# Pareto-Front for each quality-ladder
+
+	# Predicted Rate-Quality Curve from Bitrate :adder
 	for i,path in enumerate(ladder_paths):
 		if "fixed_bitrate_ladder" in path:
 			BL = np.load(path, allow_pickle=True)[()]
 			BL = correction_algorithms.Top_Bottom(BL)
 
-			# Constructing Pareto-Front
-			Pareto_Front, Pareto_Front_Points = bitrate_ladder_functions.Pareto_Front_from_Bitrate_Ladder(
+			# Constructing Rate-Quality_Curve
+			RQ_curve_pairs, RQ_Points = bitrate_quality_ladder_evaluation_functions.Rate_Quality_Curve_from_Bitrate_Ladder(
 				RQ_pairs=RQ_pairs,
 				Bitrate_Ladder=BL
 			)
-		elif "reference_bitrate_ladder" in path:
+		elif "standard" in path:
 			BL = np.load(path, allow_pickle=True)[()][video_file]
 			BL = correction_algorithms.Top_Bottom(BL)
 
-			# Constructing Pareto-Front
-			Pareto_Front, Pareto_Front_Points = bitrate_ladder_functions.Pareto_Front_from_Bitrate_Ladder(
+			# Constructing Rate-Quality_Curve
+			RQ_curve_pairs, RQ_Points = bitrate_quality_ladder_evaluation_functions.Rate_Quality_Curve_from_Bitrate_Ladder(
 				RQ_pairs=RQ_pairs,
 				Bitrate_Ladder=BL
 			)
-		elif "bitrate_ladder" in path:
+		elif "bitrate_ladders" in path:
 			BL = np.load(path, allow_pickle=True)[()][video_file]
 			BL = correction_algorithms.Top_Bottom(BL)
 
-			# Constructing Pareto-Front
-			Pareto_Front, Pareto_Front_Points = bitrate_ladder_functions.Pareto_Front_from_Bitrate_Ladder(
+			# Constructing Rate-Quality_Curve
+			RQ_curve_pairs, RQ_Points = bitrate_quality_ladder_evaluation_functions.Rate_Quality_Curve_from_Bitrate_Ladder(
 				RQ_pairs=RQ_pairs,
 				Bitrate_Ladder=BL
 			)
@@ -217,25 +291,26 @@ def Plot_Pareto_Front(
 			QL = np.load(path, allow_pickle=True)[()][video_file]
 			QL = correction_algorithms.Bottom_Top(QL)
 
-			# Constructing Pareto-Front
-			Pareto_Front, Pareto_Front_Points = quality_ladder_functions.Pareto_Front_from_Quality_Ladder(
+			# Constructing Rate-Quality_Curve
+			RQ_curve_pairs, RQ_Points = bitrate_quality_ladder_evaluation_functions.Rate_Quality_Curve_from_Quality_Ladder(
 				RQ_pairs=RQ_pairs,
 				Quality_Ladder=QL
 			)
 
 
-		# Plotting Pareto-Front
-		plt.plot(Pareto_Front_Points[:,0], Pareto_Front_Points[:,1], linestyle=linestyles[i] , label=ladder_labels[i], linewidth=3)
+		# Plotting Rate-Quality_Curve
+		plt.plot(RQ_Points[:,0], RQ_Points[:,1], linestyle=linestyles[i] , label=ladder_labels[i], linewidth=3)
 
 
 		# Scatter Plot for each Resolution
 		for res in defaults.resolutions:
-			data = Pareto_Front[res]
+			data = RQ_curve_pairs[res]
 			res_string = "{}x{}".format(res[0],res[1])
 			if data.shape[0] > 0:
 				plt.scatter(data[:,0], data[:,1], color=Resolution_Color_Map[res], label=res_string, s=75, marker="o")				
 		
 
+	# Legend
 	handles, labels = plt.gca().get_legend_handles_labels()
 	Handles_Labels_Dict = {}
 	
@@ -254,44 +329,6 @@ def Plot_Pareto_Front(
 	Handles_Labels = {k: v for k, v in Handles_Labels_Dict.items() if v is not None}
 	labels, handles = tuple(Handles_Labels.keys()), tuple(Handles_Labels.values())
 	plt.legend(handles, labels)
-	plt.savefig(os.path.join(results_path, video_file+".png"), dpi=500, bbox_inches='tight')
 
-
-# Plotting BD-Histograms
-def Plot_BD_Metrics(
-	bd_metrics_path,
-	save_path
-):
-	# Calculating BD-metrics
-	Metrics = np.load(bd_metrics_path)
-	Metrics = Metrics[np.logical_not(np.all(np.isnan(Metrics), axis=1)), :]
-	mean = np.round(np.mean(Metrics, axis=0), decimals=3)
-	std = np.round(np.std(Metrics, axis=0), decimals=3)
-
-	# Histogram plot of BD-metrics
-	bitrate_bins = [-50,-40,-30,-20,-10,0,5,10,15,20,25]
-	quality_bins = [-4,-3,-2,-1,0,2,4,6,8]
-
-	plt.figure(figsize=(12,8))
-
-	plt.subplot(2,2,1)
-	plt.title(r"BD-Rate wrt AL ($\mu$={}, $\sigma$={})".format(mean[0], std[0]))
-	plt.grid()
-	sns.histplot(data=Metrics[:,0], bins=bitrate_bins, kde=True, element="step")
-
-	plt.subplot(2,2,2)
-	plt.title(r"BD-VMAF wrt AL ($\mu$={}, $\sigma$={})".format(mean[1], std[1]))
-	plt.grid()
-	sns.histplot(data=Metrics[:,1], bins=quality_bins, kde=True, element="step")
-
-	plt.subplot(2,2,3)
-	plt.title(r"BD-Rate wrt RL ($\mu$={}, $\sigma$={})".format(mean[2], std[2]))
-	plt.grid()
-	sns.histplot(data=Metrics[:,2], bins=bitrate_bins, kde=True, element="step")
-
-	plt.subplot(2,2,4)
-	plt.title(r"BD-VMAF wrt RL ($\mu$={}, $\sigma$={})".format(mean[3], std[3]))
-	plt.grid()
-	sns.histplot(data=Metrics[:,3], bins=quality_bins, kde=True, element="step")
-
-	plt.savefig(save_path, dpi=400, bbox_inches='tight')
+	# Save fig
+	plt.savefig(save_path, dpi=500, bbox_inches='tight')

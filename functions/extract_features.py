@@ -2,13 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import torch
-
 import os, sys, warnings
 import pickle
 from tqdm import tqdm
 warnings.filterwarnings("ignore")
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import functions.extract_functions as extract_functions
 import functions.IO_functions as IO_functions
 import defaults
@@ -22,7 +20,6 @@ def Extract_RQ_Features(
 	video_filenames:list,
 	Resolutions_Considered:list,
 	CRFs_Considered:list,
-	bitrates_Considered:list,
 	QPs_Considered:list,
 	min_quality=defaults.min_quality,
 	max_quality=defaults.max_quality,
@@ -54,8 +51,6 @@ def Extract_RQ_Features(
 		# Rate-Quality/Meta Information
 		if CRFs_Considered is not None:
 			video_rq_points_info = IO_functions.read_create_jsonfile(os.path.join(defaults.rq_points_dataset_path, codec, preset, video_file, "crfs.json"))
-		elif bitrates_Considered is not None:
-			video_rq_points_info = IO_functions.read_create_jsonfile(os.path.join(defaults.rq_points_dataset_path, codec, preset, video_file, "bitrates.json"))
 		elif QPs_Considered is not None:
 			video_rq_points_info = IO_functions.read_create_jsonfile(os.path.join(defaults.rq_points_dataset_path, codec, preset, video_file, "qps.json"))
 		else:
@@ -66,7 +61,6 @@ def Extract_RQ_Features(
 			quality_metric=quality_metric,
 			resolutions=Resolutions_Considered,
 			CRFs=CRFs_Considered,
-			bitrates=bitrates_Considered,
 			QPs=QPs_Considered,
 			min_quality=min_quality,
 			max_quality=max_quality,

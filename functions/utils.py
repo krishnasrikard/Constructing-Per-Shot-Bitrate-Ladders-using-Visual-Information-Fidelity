@@ -2,8 +2,6 @@ import numpy as np
 import math
 from scipy.interpolate import CubicHermiteSpline
 
-import torch
-
 import os
 import json
 

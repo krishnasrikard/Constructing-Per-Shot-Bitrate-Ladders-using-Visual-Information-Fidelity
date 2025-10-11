@@ -11,7 +11,7 @@ import subprocess, shlex
 import time
 from tqdm import tqdm
 warnings.filterwarnings("ignore")
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import functions.ffmpeg_commands as ffmpeg_commands
 import functions.extract_functions as extract_functions
 import functions.IO_functions as IO_functions

@@ -93,7 +93,6 @@ def Extract_RQ_Information(
 	quality_metric:str=None,
 	resolutions:list=None,
 	CRFs:list=None,
-	bitrates:list=None,
 	QPs:list=None,
 	min_quality=-np.inf,
 	max_quality=np.inf,
@@ -108,7 +107,6 @@ def Extract_RQ_Information(
 		quality_metric (str): Selected quality-metric. Options: ["psnr_y", "integer_motion2", "integer_motion","integer_adm2","integer_adm_scale0","integer_adm_scale1","integer_adm_scale2","integer_adm_scale3","float_ssim","integer_vif_scale0","integer_vif_scale1","integer_vif_scale2","integer_vif_scale3","float_ms_ssim","vmaf"] (Default: None)
 		resolutions (list): Resolutions that needs to be considered while plotting RQ points. (Default: None)
 		CRFs (list): CRFs that needs to be considered while plotting RQ points. (Default: None)
-		bitrates (list): Bitrates that needs to be considered (in kbps) while plotting RQ points. (Default: None)
 		QPs (list): QPs that needs to be considered while plotting RQ points. (Default: None)
 		min_quality (float): Minimum quality to be considered for in output pairs/info. (Default: -np.inf)
 		max_quality (float): Maximum quality to be considered for in output pairs/info. (Default: np.inf)
@@ -120,12 +118,12 @@ def Extract_RQ_Information(
 	"""
 
 	# Assertions
-	valid_rate_settings = ((QPs is not None) and (CRFs is None) and (bitrates is None)) or ((QPs is None) and (CRFs is not None) and (bitrates is None)) or ((QPs is None) and (CRFs is None) and (bitrates is not None))
-	assert valid_rate_settings, "Provide valid rate-control settings i.e only one list of QPs, CRFs or bitrates"
+	valid_rate_settings = ((QPs is not None) and (CRFs is None)) or ((QPs is None) and (CRFs is not None))
+	assert valid_rate_settings, "Provide valid rate-control settings i.e only one list of QPs or CRFs"
 	assert quality_metric in ["psnr_y", "integer_motion2", "integer_motion","integer_adm2","integer_adm_scale0","integer_adm_scale1","integer_adm_scale2","integer_adm_scale3","float_ssim","integer_vif_scale0","integer_vif_scale1","integer_vif_scale2","integer_vif_scale3","float_ms_ssim","vmaf"], "Provide valid quality metric"
 	
 	# Rate-Control
-	rate_control = CRFs if CRFs is not None else (bitrates if bitrates is not None else QPs)
+	rate_control = CRFs if CRFs is not None else QPs
 
 	# Output
 	RQ_pairs = {}

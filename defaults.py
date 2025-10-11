@@ -32,9 +32,10 @@ max_quality = 95
 
 
 ## Paths to Datasets
-rq_points_dataset_path = "/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/dataset/rq_points_dataset"
-llf_features_path = "/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/dataset/features_dataset/low_level_features"
-vif_information_path = "/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/dataset/features_dataset/vif"
+source_dataset_path = "/home/kd28684/Nebula/krishna/Downloads/BVT-100_4K"
+rq_points_dataset_path = "/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/dataset/rq_points_dataset"
+llf_features_path = "/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/dataset/features_dataset/low_level_features"
+vif_information_path = "/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/dataset/features_dataset/vif"
 
 
 # Evaluation Bitrates i.e Steps in Bitrate Ladder

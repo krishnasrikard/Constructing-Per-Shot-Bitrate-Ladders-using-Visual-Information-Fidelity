@@ -6,7 +6,7 @@ import cv2
  
 import os
 import sys
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 from functions.img_tools import moments, im2col
 
 

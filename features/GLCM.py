@@ -4,7 +4,7 @@ import cv2
 import scipy
 
 import sys
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 
 
 class GLCM_Features():

@@ -5,7 +5,7 @@ import os, sys, warnings
 import pickle
 from tqdm import tqdm
 warnings.filterwarnings("ignore")
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import functions.utils as utils
 
 def Pareto_Front_Points(

@@ -7,11 +7,51 @@ import cv2
 
 import os,sys,warnings
 warnings.filterwarnings("ignore")
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import argparse
 import joblib
 import features.VIF as VIF
 import functions.IO_functions as IO_functions
+
+
+# Resize Video
+def resize_video(
+	original_video:np.array,
+	resize_dimensions:any
+):
+	"""
+	Args:
+		original_video (np.array): Original numpy video.
+		resize_dimensions (any): Resize video to given dimensions (width, height).
+	"""
+	# Dimension
+	width = original_video.shape[2]
+	height = original_video.shape[1]
+
+	# Skip if original video has same dimensions as resize dimensions
+	if resize_dimensions[0] == width and resize_dimensions[1] == height:
+		# Logging
+		print ("Original Video Dimensions = Resize Dimensions = {}".format(resize_dimensions))
+
+		return original_video
+	
+	# Resizing
+	video = []
+	for i in range(original_video.shape[0]):
+		video.append(
+			cv2.resize(original_video[i], dsize=(resize_dimensions[0], resize_dimensions[1]), interpolation=cv2.INTER_LANCZOS4)
+		)
+
+	video = np.array(video)
+
+	# Assertions
+	assert (video.dtype == np.uint8) and (np.min(video) >= 0 and np.max(video) <= 255), "Input Image/Videos should of type uint8 and should have range [0,255]."
+
+	# Logging
+	print ("Original Video Dimensions = {}".format((width, height)))
+	print ("Resized Video Dimensions = {}".format((video.shape[2], video.shape[1])))
+
+	return video
 
 
 
@@ -46,8 +86,10 @@ def extract_vif_features(uncompressed_video_path, reference_features_save_path):
 		# Luma Component of current frame
 		# Converting to int32 to avoid overflow during operations.
 		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2YUV)[:,:,0]
-		if frame.shape != (2160,3840):
-			frame = cv2.resize(frame, dsize=(3840, 2160), interpolation=cv2.INTER_LANCZOS4).astype(np.int32)
+		frame = frame.astype(np.int32)
+
+		# Assertion
+		assert (frame.dtype == np.int32) and (np.min(frame) >= 0 and np.max(frame) <= 255), "Before calculation frame should of type uint8 and should have range [0,255]."
 
 
 		# Decomposation
@@ -74,14 +116,16 @@ def extract_vif_features(uncompressed_video_path, reference_features_save_path):
 		# Luma Component of current frame
 		# Converting to int32 to avoid overflow during operations.
 		current_frame = cv2.cvtColor(current_frame, cv2.COLOR_RGB2YUV)[:,:,0]
-		if current_frame.shape != (2160,3840):
-			current_frame = cv2.resize(current_frame, dsize=(3840, 2160), interpolation=cv2.INTER_LANCZOS4).astype(np.int32)
+		current_frame = current_frame.astype(np.int32)
 			
 		# Luma Component of previous frame
 		# Converting to int32 to avoid overflow during operations.
 		previous_frame = cv2.cvtColor(previous_frame, cv2.COLOR_RGB2YUV)[:,:,0]
-		if previous_frame.shape != (2160,3840):
-			previous_frame = cv2.resize(previous_frame, dsize=(3840, 2160), interpolation=cv2.INTER_LANCZOS4).astype(np.int32)
+		previous_frame = previous_frame.astype(np.int32)
+
+		# Assertions
+		assert (current_frame.dtype == np.int32) and (np.min(current_frame) >= 0 and np.max(current_frame) <= 255), "Before calculation frame should of type int32 and should have range [0,255]."
+		assert (previous_frame.dtype == np.int32) and (np.min(previous_frame) >= 0 and np.max(previous_frame) <= 255), "Before calculation frame should of type int32 and should have range [0,255]."
 
 		# Frame Difference
 		diff_frame = np.copy(current_frame - previous_frame)
@@ -153,11 +197,11 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Estimating compressed video information')
 
 	# Dataset Paths
-	parser.add_argument('--raw_videos_path', default='/home/krishna/Nebula/krishna/BVT-100_4K', help='Path to dataset.')
-	parser.add_argument('--vif_information_path', default='/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/dataset/features_dataset/vif', help='Path to information of various parameters computed during VIF quality estimation of compressed videos.')
+	parser.add_argument('--raw_videos_path', default='/home/kd28684/Nebula/krishna/BVT-100_4K', help='Path to dataset.')
+	parser.add_argument('--vif_information_path', default='/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/dataset/features_dataset/vif', help='Path to information of various parameters computed during VIF quality estimation of compressed videos.')
 	
 	# Main Path
-	parser.add_argument('--main_path', default='/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/generate', type=str, help='Path to main folder')
+	parser.add_argument('--main_path', default='/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/generate', type=str, help='Path to main folder')
 
 	# Number of Parallel Jobs
 	parser.add_argument('--n_jobs', default=4, type=int, help='Number of parallel jobs. Each jobs handles one video. Recommended value ~ 0.5 * number of cores to number of cores. -1 uses n_jobs = number of cores')

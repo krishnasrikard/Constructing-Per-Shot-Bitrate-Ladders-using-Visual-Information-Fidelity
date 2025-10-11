@@ -4,7 +4,7 @@ Saving compressed videos
 """
 
 import os, sys
-sys.path.append("/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity")
+sys.path.append("/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working")
 import argparse
 import functions.rate_quality_estimations as rate_quality_estimations
 import defaults
@@ -98,13 +98,13 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Estimating compressed video information')
 
 	# Dataset Paths
-	parser.add_argument('--raw_videos_path', default='/home/krishna/Nebula/krishna/BVT-100_4K', help='Path to dataset.')
-	parser.add_argument('--rq_points_dataset', default='/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/dataset/rq_points_dataset', help='Path to RQ points dataset.')
+	parser.add_argument('--raw_videos_path', default='/home/kd28684/Nebula/krishna/BVT-100_4K', help='Path to dataset.')
+	parser.add_argument('--rq_points_dataset', default='/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/dataset/rq_points_dataset', help='Path to RQ points dataset.')
 	parser.add_argument('--compressed_videos_dataset', default='None', help='Path to compressed videos dataset.')
-	parser.add_argument('--ffmpeg_path', default="/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/ffmpeg/ffmpeg-6.0-amd64-static", help='Path to ffmpeg.')	
+	parser.add_argument('--ffmpeg_path', default="/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/softwares/ffmpeg/ffmpeg-6.0-amd64-static", help='Path to ffmpeg.')	
 
 	# Main Path
-	parser.add_argument('--main_path', default='/home/krishna/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity/generate', type=str, help='Path to main folder')
+	parser.add_argument('--main_path', default='/home/kd28684/Constructing-Per-Shot-Bitrate-Ladders-using-Visual-Information-Fidelity-Working/generate', type=str, help='Path to main folder')
 
 	# Processing
 	parser.add_argument('--num_threads', default=8, type=int, help='No.of threads used to run ffmpeg commands. Generally no.of threads are set between 4-8 for ffmpeg. (Default: 8)')
